@@ -54,23 +54,24 @@ function authenticate(username, password) {
   return signin({
     url: baseUrl,
     formSelector: 'form',
-    formData: { username, password },
-    // the validate function will check if the login request was a success. Every website has
-    // different ways respond: http status code, error message in html ($), http redirection
-    // (fullResponse.request.uri.href)...
+    formData: { 
+      'Login$tbLogin': username, 
+      'Login$tbPass': password,
+      '__EVENTTARGET': 'Login$LienLogin'
+    },
+
     validate: (statusCode, $, fullResponse) => {
       log(
         'debug',
         fullResponse.request.uri.href,
         'not used here but should be usefull for other connectors'
       )
-      // The login in toscrape.com always works excepted when no password is set
-      if ($(`a[href='/logout']`).length === 1) {
+      if ($('.icon-mon_compte').length != 0 || fullResponse.request.uri.href == 'https://www.showroomprive.com/accueil.aspx') {
         return true
       } else {
         // cozy-konnector-libs has its own logging function which format these logs with colors in
         // standalone and dev mode and as JSON in production mode
-        log('error', $('.error').text())
+        log('error', $('#Login_ValidationSummaryLogin').text())
         return false
       }
     }
