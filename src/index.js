@@ -19,7 +19,7 @@ const request = requestFactory({
   jar: true
 })
 
-const baseUrl = 'http://books.toscrape.com'
+const baseUrl = 'https://www.showroomprive.com/'
 
 module.exports = new BaseKonnector(start)
 
@@ -30,7 +30,7 @@ async function start(fields) {
   log('info', 'Authenticating ...')
   await authenticate(fields.login, fields.password)
   log('info', 'Successfully logged in')
-  // The BaseKonnector instance expects a Promise as return of the function
+  /* // The BaseKonnector instance expects a Promise as return of the function
   log('info', 'Fetching the list of documents')
   const $ = await request(`${baseUrl}/index.html`)
   // cheerio (https://cheerio.js.org/) uses the same api as jQuery (http://jquery.com/)
@@ -45,14 +45,14 @@ async function start(fields) {
     // identifiers should be at least a word found in the title of a bank operation related to this
     // bill. It is not case sensitive.
     identifiers: ['books']
-  })
+  }) */
 }
 
 // this shows authentication using the [signin function](https://github.com/konnectors/libs/blob/master/packages/cozy-konnector-libs/docs/api.md#module_signin)
 // even if this in another domain here, but it works as an example
 function authenticate(username, password) {
   return signin({
-    url: `http://quotes.toscrape.com/login`,
+    url: baseUrl,
     formSelector: 'form',
     formData: { username, password },
     // the validate function will check if the login request was a success. Every website has
