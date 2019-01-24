@@ -23,54 +23,42 @@ const baseUrl = 'https://www.showroomprive.com/'
 
 module.exports = new BaseKonnector(start)
 
-// The start function is run by the BaseKonnector instance only when it got all the account
-// information (fields). When you run this connector yourself in "standalone" mode or "dev" mode,
-// the account information come from ./konnector-dev-config.json file
 async function start(fields) {
   log('info', 'Authenticating ...')
   await authenticate(fields.login, fields.password)
   log('info', 'Successfully logged in')
-  /* // The BaseKonnector instance expects a Promise as return of the function
-  log('info', 'Fetching the list of documents')
-  const $ = await request(`${baseUrl}/index.html`)
-  // cheerio (https://cheerio.js.org/) uses the same api as jQuery (http://jquery.com/)
-  log('info', 'Parsing list of documents')
-  const documents = await parseDocuments($)
 
+  // Get orders page
+  request({
+    uri: `${baseUrl}/moncompte/mescommandes.aspx`,
+    method: 'GET'
+  }, (error, response, body) => {
+    parseDocuments(body)
+  })
+
+  //* Suite du code
   // here we use the saveBills function even if what we fetch are not bills, but this is the most
   // common case in connectors
-  log('info', 'Saving data to Cozy')
+  /*log('info', 'Saving data to Cozy')
   await saveBills(documents, fields, {
-    // this is a bank identifier which will be used to link bills to bank operations. These
-    // identifiers should be at least a word found in the title of a bank operation related to this
-    // bill. It is not case sensitive.
     identifiers: ['books']
   }) */
 }
 
-// this shows authentication using the [signin function](https://github.com/konnectors/libs/blob/master/packages/cozy-konnector-libs/docs/api.md#module_signin)
-// even if this in another domain here, but it works as an example
 function authenticate(username, password) {
   return signin({
     url: baseUrl,
     formSelector: 'form',
-    formData: { 
-      'Login$tbLogin': username, 
+    formData: {
+      'Login$tbLogin': username,
       'Login$tbPass': password,
       '__EVENTTARGET': 'Login$LienLogin'
     },
 
     validate: (statusCode, $, fullResponse) => {
-      log(
-        'debug',
-        fullResponse.request.uri.href,
-        'not used here but should be usefull for other connectors'
-      )
       if ($('.icon-mon_compte').length != 0 || fullResponse.request.uri.href == 'https://www.showroomprive.com/accueil.aspx') {
         return true
       } else {
-        // cozy-konnector-libs has its own logging function which format these logs with colors in
-        // standalone and dev mode and as JSON in production mode
         log('error', $('#Login_ValidationSummaryLogin').text())
         return false
       }
@@ -78,36 +66,19 @@ function authenticate(username, password) {
   })
 }
 
-// The goal of this function is to parse a html page wrapped by a cheerio instance
-// and return an array of js objects which will be saved to the cozy by saveBills (https://github.com/konnectors/libs/blob/master/packages/cozy-konnector-libs/docs/api.md#savebills)
-function parseDocuments($) {
-  // you can find documentation about the scrape function here :
-  // https://github.com/konnectors/libs/blob/master/packages/cozy-konnector-libs/docs/api.md#scrape
-  const docs = scrape(
-    $,
-    {
-      title: {
-        sel: 'h3 a',
-        attr: 'title'
-      },
-      amount: {
-        sel: '.price_color',
-        parse: normalizePrice
-      },
-      fileurl: {
-        sel: 'img',
-        attr: 'src',
-        parse: src => `${baseUrl}/${src}`
-      },
-      filename: {
-        sel: 'h3 a',
-        attr: 'title',
-        parse: title => `${title}.jpg`
-      }
-    },
-    'article'
-  )
-  return docs.map(doc => ({
+function parseDocuments(page) {
+  let docs
+  // Get json array of orders (in the retreived js code)
+  page = page.split('\n')
+  page.forEach(line => {
+    if (line.includes('OrderCtrl.JSONGlobalMesCommandes =')) {
+      line = line.replace(';', '')
+      line = line.split('[')
+      const orders = JSON.parse('[' + line[1])
+    }
+  })
+
+  /* return docs.map(doc => ({
     ...doc,
     // the saveBills function needs a date field
     // even if it is a little artificial here (these are not real bills)
@@ -121,7 +92,7 @@ function parseDocuments($) {
       // document version, useful for migration after change of document structure
       version: 1
     }
-  }))
+  })) */
 }
 
 // convert a price string to a float
