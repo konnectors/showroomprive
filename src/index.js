@@ -72,7 +72,7 @@ function parseDocuments(page) {
       orders.forEach(order => {
         let doc = {}
         doc.vendorRef = order.orderId
-        doc.date = order.createShortDate
+        doc.date = parseDate(order.createShortDate)
         doc.amount = order.amount
         docs.push(doc)
       })
@@ -92,7 +92,11 @@ function parseDocuments(page) {
   }))
 }
 
-// convert a price string to a float
-function normalizePrice(price) {
-  return parseFloat(price.replace('£', '').trim())
+function parseDate(date) {
+    let [day, time] = date.split(' ')
+    day = day.split('/').reverse()
+    const year = day.shift()
+    day.push(year)
+    day = day.join('/')
+    return new Date(`${day}`)
 }
