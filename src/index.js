@@ -28,21 +28,15 @@ async function start(fields) {
   await authenticate(fields.login, fields.password)
   log('info', 'Successfully logged in')
 
+  log('info', 'Parse documents')
   // Get orders page
-  request({
+  const orderPage = await request({
     uri: `${baseUrl}/moncompte/mescommandes.aspx`,
-    method: 'GET'
-  }, (error, response, body) => {
-    parseDocuments(body)
+    method: 'GET',
+    cheerio: false
   })
 
-  //* Suite du code
-  // here we use the saveBills function even if what we fetch are not bills, but this is the most
-  // common case in connectors
-  /*log('info', 'Saving data to Cozy')
-  await saveBills(documents, fields, {
-    identifiers: ['books']
-  }) */
+  const documents = parseDocuments(orderPage.html())
 }
 
 function authenticate(username, password) {
@@ -67,32 +61,35 @@ function authenticate(username, password) {
 }
 
 function parseDocuments(page) {
-  let docs
+  let docs = []
   // Get json array of orders (in the retreived js code)
   page = page.split('\n')
-  page.forEach(line => {
+  page.every(line => {
     if (line.includes('OrderCtrl.JSONGlobalMesCommandes =')) {
       line = line.replace(';', '')
       line = line.split('[')
       const orders = JSON.parse('[' + line[1])
+      orders.forEach(order => {
+        let doc = {}
+        doc.vendorRef = order.orderId
+        doc.date = order.createShortDate
+        doc.amount = order.amount
+        docs.push(doc)
+      })
+      return false
     }
+    return true
   })
 
-  /* return docs.map(doc => ({
+  return docs.map(doc => ({
     ...doc,
-    // the saveBills function needs a date field
-    // even if it is a little artificial here (these are not real bills)
-    date: new Date(),
     currency: '€',
-    vendor: 'template',
+    vendor: 'showroomprive',
     metadata: {
-      // it can be interesting that we add the date of import. This is not mandatory but may be
-      // useful for debugging or data migration
       importDate: new Date(),
-      // document version, useful for migration after change of document structure
       version: 1
     }
-  })) */
+  }))
 }
 
 // convert a price string to a float
