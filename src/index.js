@@ -37,6 +37,11 @@ async function start(fields) {
   })
 
   const documents = parseDocuments(orderPage.html())
+
+  log('info', 'Saving data to Cozy')
+  await saveBills(documents, fields, {
+    identifiers: ['showroomprive']
+  })
 }
 
 function authenticate(username, password) {
