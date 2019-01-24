@@ -2,20 +2,14 @@ const {
   BaseKonnector,
   requestFactory,
   signin,
-  scrape,
+  createCozyPDFDocument,
+  htmlToPDF,
   saveBills,
   log
 } = require('cozy-konnector-libs')
 const request = requestFactory({
-  // the debug mode shows all the details about http request and responses. Very useful for
-  // debugging but very verbose. That is why it is commented out by default
-  // debug: true,
-  // activates [cheerio](https://cheerio.js.org/) parsing on each page
   cheerio: true,
-  // If cheerio is activated do not forget to deactivate json parsing (which is activated by
-  // default in cozy-konnector-libs
   json: false,
-  // this allows request-promise to keep cookies between requests
   jar: true
 })
 
@@ -29,18 +23,17 @@ async function start(fields) {
   log('info', 'Successfully logged in')
 
   log('info', 'Parse documents')
-  // Get orders page
   const orderPage = await request({
     uri: `${baseUrl}/moncompte/mescommandes.aspx`,
-    method: 'GET',
     cheerio: false
   })
 
-  const documents = parseDocuments(orderPage.html())
+  const documents = await parseDocuments(orderPage.html())
 
   log('info', 'Saving data to Cozy')
   await saveBills(documents, fields, {
-    identifiers: ['showroomprive']
+    identifiers: ['showroomprive'],
+    contentType: 'application/pdf'
   })
 }
 
@@ -65,43 +58,79 @@ function authenticate(username, password) {
   })
 }
 
-function parseDocuments(page) {
+async function parseDocuments(page) {
   let docs = []
-  // Get json array of orders (in the retreived js code)
+  // Get json array of orders (from the retreived js code)
   page = page.split('\n')
   page.every(line => {
     if (line.includes('OrderCtrl.JSONGlobalMesCommandes =')) {
       line = line.replace(';', '')
       line = line.split('[')
       const orders = JSON.parse('[' + line[1])
-      orders.forEach(order => {
-        let doc = {}
-        doc.vendorRef = order.orderId
-        doc.date = parseDate(order.createShortDate)
-        doc.amount = order.amount
-        docs.push(doc)
-      })
+      docs = createDocs(orders)
       return false
     }
     return true
   })
 
-  return docs.map(doc => ({
-    ...doc,
-    currency: '€',
-    vendor: 'showroomprive',
-    metadata: {
-      importDate: new Date(),
-      version: 1
+  // Add required fields for savebBills
+  for (var i = 0; i < docs.length; i++) {
+    var doc = docs[i]
+
+    doc.filestream = await createPDFs(doc)
+    doc.filestream.end()
+
+    docs[i] = {
+      ...doc,
+      currency: '€',
+      vendor: 'showroomprive',
+      filename: `${doc.formatedDate}_showroomprive_${doc.amount}€_${doc.vendorRef}.pdf`,
+      metadata: {
+        importDate: new Date(),
+        version: 1
+      }
     }
-  }))
+    delete docs[i].formatedDate
+  }
+  return docs
+}
+
+/**
+ * Create a pdf for the given document
+ * @param {*} doc : the document 
+ * @return the PDF
+ */
+async function createPDFs(doc) {
+  const fileUrl = `https://www.showroomprive.com/moncompte/iframe/imprimefacture.aspx?commandeid=${doc.vendorRef}`
+  const $doc = await request(fileUrl)
+  var pdf = createCozyPDFDocument('Généré par Cozy', fileUrl)
+  htmlToPDF($doc, pdf, $doc('table < div'), { baseUrl: fileUrl })
+  return pdf
+}
+
+/**
+ * Create documents to save them as bills
+ * @param {*} orders : the list of orders to convert to documents
+ * @return list of all documents
+ */
+function createDocs(orders) {
+  let docs = []
+  orders.forEach(order => {
+    let doc = {}
+    doc.vendorRef = order.orderId
+    doc.date = parseDate(order.createShortDate)
+    doc.amount = order.amount
+    doc.formatedDate = `${doc.date.getFullYear()}-${("0" + (doc.date.getMonth() + 1)).slice(-2)}-${("0" + doc.date.getDate()).slice(-2)}`
+    docs.push(doc)
+  })
+  return docs
 }
 
 function parseDate(date) {
-    let [day, time] = date.split(' ')
-    day = day.split('/').reverse()
-    const year = day.shift()
-    day.push(year)
-    day = day.join('/')
-    return new Date(`${day}`)
+  let [day, time] = date.split(' ')
+  day = day.split('/').reverse()
+  const year = day.shift()
+  day.push(year)
+  day = day.join('/')
+  return new Date(`${day}`)
 }
