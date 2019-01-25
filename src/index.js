@@ -116,7 +116,7 @@ function createDocs(orders) {
   let docs = []
   orders.forEach(order => {
     let doc = {}
-    doc.vendorRef = order.orderId
+    doc.vendorRef = order.orderId.toString()
     doc.date = parseDate(order.createShortDate)
     doc.amount = order.amount
     doc.formatedDate = `${doc.date.getFullYear()}-${("0" + (doc.date.getMonth() + 1)).slice(-2)}-${("0" + doc.date.getDate()).slice(-2)}`
