@@ -1,0 +1,41 @@
+language: node_js
+node_js:
+- '8'
+env:
+  global:
+  - GH_USER_EMAIL="travis@example.org"
+  - GH_USER_NAME="cozy-bot"
+  - DEPLOY_REPOSITORY="git@github.com:konnectors/showroomprive.git"
+  - secure: BN82hnzOiviy+2VC0Lp1l2sibRb9aPgE8Y84oPbJhe/mc9GmLrxAYaLzmkxu94AIggqfQk7i7gqzhDsDdzaLdjG9CrhGelo8UurVGm2gM4VgW688vYS+b6dxx+HSLxPqigt0nYWjp+1wBEEAI57kOWTsHXAKFFXAdO4s3Wm8NgRycDi31SbIWd00TQtMY76zrst4YuC2vSrBm4dOKaHuoa6fOzRzDpslW4IS6N22yvaGAzYoaHPzwDm9Bc/twvGvCTQh6qHvXtY7U1R/fjcImrgy4CrflcJta8ySfKBTEAjVUZZu2itImGPaMtUUrnkDzLeb9KjaKrfTlMp4GR8Mvjprgo0rATDsuFOZCK8q5YTuahE0dAD/opZeH/MhNJo5GWezrJx6LIIBs3LZgEO1pM3oTCidtsVkri+Ka7FyIj+Y+XjGKy/YfMJDbLoFSlbD9fNrytT2ZIIVtJf8nxtFRuX2qdXiFh0/Y2x+xw8pkOYNLBc3ZIw0lyBPFjbqwUM83YFRRRuj/d5fLQetu7hnjNSNcZN1Sb1wILImqyQzCbETI+P75nqWwcMErooxXwFqCotK5fu27O4258vVNZMj7y12hAMlZHllt+chpAnMhpHZf6lWlw1ulh7bgOPYO1jiKytXKL+McL89KBICXFr08CKW55z+LfREvtEkn117RJE=
+cache:
+  yarn: true
+  directories:
+  - node_modules
+branches:
+  except:
+  - build
+  - build-debug
+script:
+- yarn lint
+- yarn build
+- yarn run check
+deploy:
+- provider: script
+  skip-cleanup: true
+  script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
+  on:
+    branch: master
+- provider: script
+  skip-cleanup: true
+  script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
+  on:
+    tags: true
+before_install:
+- openssl aes-256-cbc -K $encrypted_34b0eb3591b6_key -iv $encrypted_34b0eb3591b6_iv
+  -in github_deploy_key.enc -out /tmp/github_deploy_key -d
+- eval "$(ssh-agent -s)"
+- chmod 600 /tmp/github_deploy_key
+- ssh-add /tmp/github_deploy_key
+after_deploy:
+- rm /tmp/github_deploy_key
+- ssh-add -D
