@@ -24,7 +24,7 @@ async function start(fields) {
 
   log('info', 'Parse documents')
   const orderPage = await request({
-    uri: `${baseUrl}/moncompte/mescommandes.aspx`,
+    uri: `${baseUrl}/moncompte/mescommandes.aspx`
   })
 
   const documents = await parseDocuments(orderPage.html())
@@ -41,13 +41,17 @@ function authenticate(username, password) {
     url: baseUrl,
     formSelector: 'form',
     formData: {
-      'Login$tbLogin': username,
-      'Login$tbPass': password,
-      '__EVENTTARGET': 'Login$LienLogin'
+      Login$tbLogin: username,
+      Login$tbPass: password,
+      __EVENTTARGET: 'Login$LienLogin'
     },
 
     validate: (statusCode, $, fullResponse) => {
-      if ($('.icon-mon_compte').length != 0 || fullResponse.request.uri.href == 'https://www.showroomprive.com/accueil.aspx') {
+      if (
+        $('.icon-mon_compte').length != 0 ||
+        fullResponse.request.uri.href ==
+          'https://www.showroomprive.com/accueil.aspx'
+      ) {
         return true
       } else {
         log('error', $('#Login_ValidationSummaryLogin').text())
@@ -83,7 +87,9 @@ async function parseDocuments(page) {
       ...doc,
       currency: '€',
       vendor: 'showroomprive',
-      filename: `${doc.formatedDate}_showroomprive_${doc.amount}€_${doc.vendorRef}.pdf`,
+      filename: `${doc.formatedDate}_showroomprive_${doc.amount}€_${
+        doc.vendorRef
+      }.pdf`,
       metadata: {
         importDate: new Date(),
         version: 1
@@ -96,11 +102,13 @@ async function parseDocuments(page) {
 
 /**
  * Create a pdf for the given document
- * @param {*} doc : the document 
+ * @param {*} doc : the document
  * @return the PDF
  */
 async function createPDFs(doc) {
-  const fileUrl = `https://www.showroomprive.com/moncompte/iframe/imprimefacture.aspx?commandeid=${doc.vendorRef}`
+  const fileUrl = `https://www.showroomprive.com/moncompte/iframe/imprimefacture.aspx?commandeid=${
+    doc.vendorRef
+  }`
   const $doc = await request(fileUrl)
   var pdf = createCozyPDFDocument('Généré par Cozy', fileUrl)
   htmlToPDF($doc, pdf, $doc('table < div'), { baseUrl: fileUrl })
@@ -119,14 +127,17 @@ function createDocs(orders) {
     doc.vendorRef = order.orderId.toString()
     doc.date = parseDate(order.createShortDate)
     doc.amount = order.amount
-    doc.formatedDate = `${doc.date.getFullYear()}-${("0" + (doc.date.getMonth() + 1)).slice(-2)}-${("0" + doc.date.getDate()).slice(-2)}`
+    doc.formatedDate = `${doc.date.getFullYear()}-${(
+      '0' +
+      (doc.date.getMonth() + 1)
+    ).slice(-2)}-${('0' + doc.date.getDate()).slice(-2)}`
     docs.push(doc)
   })
   return docs
 }
 
 function parseDate(date) {
-  let [day, time] = date.split(' ')
+  let [day] = date.split(' ')
   day = day.split('/').reverse()
   const year = day.shift()
   day.push(year)
