@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "Shooroom Privé",
+  "name": "Showroom Privé",
   "type": "konnector",
   "language": "node",
   "icon": "icon.png",
