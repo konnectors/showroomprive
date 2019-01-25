@@ -25,7 +25,6 @@ async function start(fields) {
   log('info', 'Parse documents')
   const orderPage = await request({
     uri: `${baseUrl}/moncompte/mescommandes.aspx`,
-    cheerio: false
   })
 
   const documents = await parseDocuments(orderPage.html())
