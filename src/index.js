@@ -87,7 +87,7 @@ async function parseDocuments(page) {
       ...doc,
       currency: '€',
       vendor: 'showroomprive',
-      filename: `${doc.formatedDate}_showroomprive_${doc.amount}€_${
+      filename: `${doc.formatedDate}_showroomprive_${doc.amount.toFixed(2)}€_${
         doc.vendorRef
       }.pdf`,
       metadata: {
