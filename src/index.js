@@ -33,7 +33,7 @@ async function start(fields) {
 
   const documents = await parseDocuments(orderPage.html())
 
-  log('info', 'Saving data to Cozy')
+  log('info', `Saving data to Cozy, ${documents.length} bills to save`)
   await saveBills(documents, fields, {
     identifiers: ['showroomprive'],
     contentType: 'application/pdf'
@@ -69,17 +69,20 @@ async function parseDocuments(page) {
   let docs = []
   // Get json array of orders (from the retreived js code)
   page = page.split('\n')
-  page.every(line => {
+  for (let line of page) {
     if (line.includes('OrderCtrl.JSONGlobalMesCommandes =')) {
-      line = line.replace(';', '')
+      if (line.includes('OrderCtrl.JSONGlobalMesCommandes = {}')) {
+        log('info', 'No bills found in page')
+        return []
+      }
+      line = line.replace(/;$/, '')
       line = line.split('[')
       const orders = JSON.parse('[' + line[1])
       docs = createDocs(orders)
-      return false
     }
-    return true
-  })
+  }
 
+  log('info', 'Generating docs')
   // Add required fields for savebBills
   for (var i = 0; i < docs.length; i++) {
     var doc = docs[i]
@@ -126,7 +129,9 @@ async function createPDFs(doc) {
  */
 function createDocs(orders) {
   let docs = []
-  orders.forEach(order => {
+  log('info', 'Parsing docs')
+  for (let order of orders) {
+    //orders.forEach(order => {
     let doc = {}
     doc.vendorRef = order.orderId.toString()
     doc.date = parseDate(order.createShortDate)
@@ -136,7 +141,7 @@ function createDocs(orders) {
       (doc.date.getMonth() + 1)
     ).slice(-2)}-${('0' + doc.date.getDate()).slice(-2)}`
     docs.push(doc)
-  })
+  } //)
   return docs
 }
 
