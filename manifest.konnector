@@ -5,7 +5,7 @@
   "language": "node",
   "icon": "icon.jpg",
   "slug": "showroomprive",
-  "source": "git://github.com/konnectors/showroomprive.git",
+  "source": "git@github.com:konnectors/showroomprive.git",
   "editor": "Cozy",
   "vendor_link": "https://www.showroomprive.com/",
   "categories": [
