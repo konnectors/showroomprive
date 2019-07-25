@@ -3,7 +3,7 @@
   "name": "Showroom Privé",
   "type": "konnector",
   "language": "node",
-  "icon": "icon.jpg",
+  "icon": "icon.svg",
   "slug": "showroomprive",
   "source": "git://github.com/konnectors/showroomprive.git",
   "editor": "Cozy",
