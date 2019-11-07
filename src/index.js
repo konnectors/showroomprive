@@ -113,9 +113,7 @@ async function parseDocuments(page) {
  * @return the PDF
  */
 async function createPDFs(doc) {
-  const fileUrl = `https://www.showroomprive.com/moncompte/iframe/imprimefacture.aspx?commandeid=${
-    doc.vendorRef
-  }`
+  const fileUrl = `https://www.showroomprive.com/moncompte/iframe/imprimefacture.aspx?commandeid=${doc.vendorRef}`
   const $doc = await request(fileUrl)
   var pdf = createCozyPDFDocument('Généré par Cozy', fileUrl)
   htmlToPDF($doc, pdf, $doc('table < div'), { baseUrl: fileUrl })
