@@ -1,11 +1,9 @@
 language: node_js
 node_js:
-- '8'
+- '12'
 env:
   global:
-  - GH_USER_EMAIL="travis@example.org"
-  - GH_USER_NAME="cozy-bot"
-  - DEPLOY_REPOSITORY="git@github.com:konnectors/showroomprive.git"
+  # REGISTRY_TOKEN(editor=cozy, app=showroomprive)
   - secure: BN82hnzOiviy+2VC0Lp1l2sibRb9aPgE8Y84oPbJhe/mc9GmLrxAYaLzmkxu94AIggqfQk7i7gqzhDsDdzaLdjG9CrhGelo8UurVGm2gM4VgW688vYS+b6dxx+HSLxPqigt0nYWjp+1wBEEAI57kOWTsHXAKFFXAdO4s3Wm8NgRycDi31SbIWd00TQtMY76zrst4YuC2vSrBm4dOKaHuoa6fOzRzDpslW4IS6N22yvaGAzYoaHPzwDm9Bc/twvGvCTQh6qHvXtY7U1R/fjcImrgy4CrflcJta8ySfKBTEAjVUZZu2itImGPaMtUUrnkDzLeb9KjaKrfTlMp4GR8Mvjprgo0rATDsuFOZCK8q5YTuahE0dAD/opZeH/MhNJo5GWezrJx6LIIBs3LZgEO1pM3oTCidtsVkri+Ka7FyIj+Y+XjGKy/YfMJDbLoFSlbD9fNrytT2ZIIVtJf8nxtFRuX2qdXiFh0/Y2x+xw8pkOYNLBc3ZIw0lyBPFjbqwUM83YFRRRuj/d5fLQetu7hnjNSNcZN1Sb1wILImqyQzCbETI+P75nqWwcMErooxXwFqCotK5fu27O4258vVNZMj7y12hAMlZHllt+chpAnMhpHZf6lWlw1ulh7bgOPYO1jiKytXKL+McL89KBICXFr08CKW55z+LfREvtEkn117RJE=
 cache:
   yarn: true
@@ -18,7 +16,6 @@ branches:
 script:
 - yarn lint
 - yarn build
-- yarn run check
 deploy:
 - provider: script
   skip-cleanup: true
