@@ -129,7 +129,7 @@ function createDocs(orders) {
   let docs = []
   log('info', 'Parsing docs')
   for (let order of orders) {
-    //orders.forEach(order => {
+    // orders.forEach(order => {
     let doc = {}
     doc.vendorRef = order.orderId.toString()
     doc.date = parseDate(order.createShortDate)
@@ -139,7 +139,7 @@ function createDocs(orders) {
       (doc.date.getMonth() + 1)
     ).slice(-2)}-${('0' + doc.date.getDate()).slice(-2)}`
     docs.push(doc)
-  } //)
+  } // )
   return docs
 }
 
